@@ -199,6 +199,28 @@ class LorawanMacHelper
     void ApplyCommonEuConfigurations(Ptr<LorawanMac> lorawanMac) const;
 
     /**
+     * Perform region-specific configurations for the 915 MHz US band.
+     *
+     * @param edMac Pointer to the device MAC layer to configure.
+     */
+    void ConfigureForUsRegion(Ptr<ClassAEndDeviceLorawanMac> edMac) const;
+
+    /**
+     * Perform region-specific configurations for the 915 MHz US band.
+     *
+     * @param gwMac Pointer to the gateway MAC layer to configure.
+     */
+    void ConfigureForUsRegion(Ptr<GatewayLorawanMac> gwMac) const;
+
+    /**
+     * Apply configurations that are common both for the GatewayLorawanMac and the
+     * ClassAEndDeviceLorawanMac classes.
+     *
+     * @param lorawanMac Pointer to the MAC layer to configure.
+     */
+    void ApplyCommonUsConfigurations(Ptr<LorawanMac> lorawanMac) const;
+
+    /**
      * Perform region-specific configurations for the SINGLECHANNEL band.
      *
      * @param edMac Pointer to the device MAC layer to configure.

@@ -82,20 +82,19 @@ main(int argc, char* argv[])
     /***********
      *  Setup  *
      ***********/
+    ns3::RngSeedManager::SetSeed(3);
 
     // Create the time value from the period
     Time appPeriod = Seconds(appPeriodSeconds);
 
     // Mobility
+    std::string xRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(radiusMeters) + "]";
+    std::string yRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(radiusMeters) + "]";
+
     MobilityHelper mobility;
-    mobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
-                                  "rho",
-                                  DoubleValue(radiusMeters),
-                                  "X",
-                                  DoubleValue(0.0),
-                                  "Y",
-                                  DoubleValue(0.0));
-    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
+                               "X", StringValue (xRange),
+                               "Y", StringValue (yRange));
 
     /************************
      *  Create the channel  *

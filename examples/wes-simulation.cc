@@ -266,7 +266,7 @@ main(int argc, char* argv[])
      *  Set up the end device's spreading factor  *
      **********************************************/
 
-    LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel);
+    auto spreadFactorDistribution = LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel, LorawanMacHelper::US);
 
     NS_LOG_DEBUG("Completed configuration");
 

@@ -402,7 +402,8 @@ LorawanMacHelper::ConfigureForUsRegion (Ptr<GatewayLorawanMac> gwMac) const
         // for (double gwch0_63 = 902.3; gwch0_63<=914.9+0.2; gwch0_63+=0.2){
         //   frequencies.push_back (gwch0_63);
         // }
-        for (double gwch64_71 = 903.0; gwch64_71<=914.2+1.6; gwch64_71+=1.6){
+        // for (double gwch64_71 = 903.0; gwch64_71<=914.2+1.6; gwch64_71+=1.6){
+        for (uint32_t gwch64_71 = 903000000; gwch64_71<=914200000+1600000; gwch64_71+=1600000){
             frequencies.push_back (gwch64_71);
         }
 
@@ -437,14 +438,14 @@ LorawanMacHelper::ApplyCommonUsConfigurations (Ptr<LorawanMac> loraMac) const
     //////////////////////
 
     uint8_t idx = 0;
-    for (uint32_t ch0_63 = 902300000; ch0_63<=914900000+200000; ch0_63+=200000){
-        Ptr<LogicalLoraChannel> lc0_63 = Create<LogicalLoraChannel> (ch0_63, 0, 3);
-        channelHelper->SetChannel(idx++, lc0_63);
-    }
-    // for (uint32_t ch64_71 = 903000000; ch64_71<=914200000+1600000; ch64_71+=1600000){
-    //     Ptr<LogicalLoraChannel> lc64_71 = Create<LogicalLoraChannel> (ch64_71, 4, 4);
-    //     channelHelper->SetChannel(idx++, lc64_71);
+    // for (uint32_t ch0_63 = 902300000; ch0_63<=914900000+200000; ch0_63+=200000){
+    //     Ptr<LogicalLoraChannel> lc0_63 = Create<LogicalLoraChannel> (ch0_63, 0, 3);
+    //     channelHelper->SetChannel(idx++, lc0_63);
     // }
+    for (uint32_t ch64_71 = 903000000; ch64_71<=914200000+1600000; ch64_71+=1600000){
+        Ptr<LogicalLoraChannel> lc64_71 = Create<LogicalLoraChannel> (ch64_71, 0, 4);
+        channelHelper->SetChannel(idx++, lc64_71);
+    }
 
     loraMac->SetLogicalLoraChannelHelper (channelHelper);
 
@@ -568,7 +569,8 @@ LorawanMacHelper::ApplyCommonSingleChannelConfigurations(Ptr<LorawanMac> lorawan
 std::vector<int>
 LorawanMacHelper::SetSpreadingFactorsUp(NodeContainer endDevices,
                                         NodeContainer gateways,
-                                        Ptr<LoraChannel> channel)
+                                        Ptr<LoraChannel> channel,
+                                        Regions region)
 {
     NS_LOG_FUNCTION_NOARGS();
 
@@ -613,44 +615,72 @@ LorawanMacHelper::SetSpreadingFactorsUp(NodeContainer endDevices,
         // Get the end device sensitivity
         Ptr<EndDeviceLoraPhy> edPhy = DynamicCast<EndDeviceLoraPhy>(loraNetDevice->GetPhy());
 
-        if (rxPower > EndDeviceLoraPhy::sensitivity[0])
+        switch (region)
         {
-            mac->SetDataRate(5);
-            sfQuantity[0]++;
+        case LorawanMacHelper::US: {
+            // TODO: determine how/if to assign the 500MHz modes
+            if (rxPower > EndDeviceLoraPhy::sensitivity[0])
+            {
+                mac->SetDataRate(3);
+                sfQuantity[0]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[1])
+            {
+                mac->SetDataRate(2);
+                sfQuantity[1]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[2])
+            {
+                mac->SetDataRate(1);
+                sfQuantity[2]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[3])
+            {
+                mac->SetDataRate(0);
+                sfQuantity[3]++;
+            }
+            break;
         }
-        else if (rxPower > EndDeviceLoraPhy::sensitivity[1])
-        {
-            mac->SetDataRate(4);
-            sfQuantity[1]++;
+        default: {
+            if (rxPower > EndDeviceLoraPhy::sensitivity[0])
+            {
+                mac->SetDataRate(5);
+                sfQuantity[0]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[1])
+            {
+                mac->SetDataRate(4);
+                sfQuantity[1]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[2])
+            {
+                mac->SetDataRate(3);
+                sfQuantity[2]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[3])
+            {
+                mac->SetDataRate(2);
+                sfQuantity[3]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[4])
+            {
+                mac->SetDataRate(1);
+                sfQuantity[4]++;
+            }
+            else if (rxPower > EndDeviceLoraPhy::sensitivity[5])
+            {
+                mac->SetDataRate(0);
+                sfQuantity[5]++;
+            }
+            else // Device is out of range. Assign SF12.
+            {
+                // NS_LOG_DEBUG ("Device out of range");
+                mac->SetDataRate(0);
+                sfQuantity[6]++;
+                // NS_LOG_DEBUG ("sfQuantity[6] = " << sfQuantity[6]);
+            }
         }
-        else if (rxPower > EndDeviceLoraPhy::sensitivity[2])
-        {
-            mac->SetDataRate(3);
-            sfQuantity[2]++;
         }
-        else if (rxPower > EndDeviceLoraPhy::sensitivity[3])
-        {
-            mac->SetDataRate(2);
-            sfQuantity[3]++;
-        }
-        else if (rxPower > EndDeviceLoraPhy::sensitivity[4])
-        {
-            mac->SetDataRate(1);
-            sfQuantity[4]++;
-        }
-        else if (rxPower > EndDeviceLoraPhy::sensitivity[5])
-        {
-            mac->SetDataRate(0);
-            sfQuantity[5]++;
-        }
-        else // Device is out of range. Assign SF12.
-        {
-            // NS_LOG_DEBUG ("Device out of range");
-            mac->SetDataRate(0);
-            sfQuantity[6]++;
-            // NS_LOG_DEBUG ("sfQuantity[6] = " << sfQuantity[6]);
-        }
-
         /*
 
         // Get the Gw sensitivity

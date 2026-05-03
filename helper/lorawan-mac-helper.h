@@ -134,7 +134,8 @@ class LorawanMacHelper
      */
     static std::vector<int> SetSpreadingFactorsUp(NodeContainer endDevices,
                                                   NodeContainer gateways,
-                                                  Ptr<LoraChannel> channel);
+                                                  Ptr<LoraChannel> channel,
+                                                  Regions region=Regions::EU);
 
     /**
      * Randomly initialize the end devices' data rate parameter according to the given

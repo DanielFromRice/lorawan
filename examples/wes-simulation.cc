@@ -1,15 +1,7 @@
 /*
- * Copyright (c) 2017 University of Padova
- *
  * SPDX-License-Identifier: GPL-2.0-only
  *
- * Author: Davide Magrin <magrinda@dei.unipd.it>
- */
-
-/*
- * This script simulates a complex scenario with multiple gateways and end
- * devices. The metric of interest for this script is the throughput of the
- * network.
+ * Author: Daniel Rothfusz (drothfusz@ucsd.edu)
  */
 
 #include "ns3/buildings-module.h"
@@ -21,12 +13,12 @@
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE("testSim");
+NS_LOG_COMPONENT_DEFINE("wesSim");
 
 // Network settings
-int nDevices = 200;                 //!< Number of end device nodes to create
+int nDevices = 20;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
-double radiusMeters = 6400;         //!< Radius (m) of the deployment
+double radiusMeters = 2000;         //!< Radius (m) of the BDR
 double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
 
 // Channel model
@@ -55,7 +47,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("testSim", LOG_LEVEL_ALL);
+    LogComponentEnable("wesSim", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
     // LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
     // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
@@ -165,6 +157,7 @@ main(int argc, char* argv[])
         Vector position = mobility->GetPosition();
         position.z = 1.2;
         mobility->SetPosition(position);
+        NS_LOG_INFO("Node " << (*j)->GetId() << " placed at " << position.x << "," << position.y);
     }
 
     // Create the LoraNetDevices of the end devices

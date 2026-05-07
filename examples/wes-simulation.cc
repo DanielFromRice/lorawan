@@ -18,14 +18,14 @@ NS_LOG_COMPONENT_DEFINE("wesSim");
 // Network settings
 int nDevices = 20;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
-double radiusMeters = 2000;         //!< Radius (m) of the BDR
-double simulationTimeSeconds = 600; //!< Scenario duration (s) in simulated time
+double widthMeters = 2000;         //!< Width (m) of the BDR
+double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time
 
 // Channel model
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
                                     //!< Buildings and correlated shadowing
 
-int appPeriodSeconds = 600; //!< Duration (s) of the inter-transmission time of end devices
+int appPeriodSeconds = 900; //!< Duration (s) of the inter-transmission time of end devices
 
 // Output control
 bool printBuildingInfo = false; //!< Whether to print building information
@@ -35,15 +35,11 @@ main(int argc, char* argv[])
 {
     CommandLine cmd(__FILE__);
     cmd.AddValue("nDevices", "Number of end devices to include in the simulation", nDevices);
-    cmd.AddValue("radius", "The radius (m) of the area to simulate", radiusMeters);
-    cmd.AddValue("realisticChannel",
-                 "Whether to use a more realistic channel model",
-                 realisticChannelModel);
+    cmd.AddValue("width", "The radius (m) of the area to simulate", widthMeters);
     cmd.AddValue("simulationTime", "The time (s) for which to simulate", simulationTimeSeconds);
     cmd.AddValue("appPeriod",
                  "The period in seconds to be used by periodically transmitting applications",
                  appPeriodSeconds);
-    cmd.AddValue("print", "Whether or not to print building information", printBuildingInfo);
     cmd.Parse(argc, argv);
 
     // Set up logging
@@ -80,8 +76,8 @@ main(int argc, char* argv[])
     Time appPeriod = Seconds(appPeriodSeconds);
 
     // Mobility
-    std::string xRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(radiusMeters) + "]";
-    std::string yRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(radiusMeters) + "]";
+    std::string xRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(widthMeters) + "]";
+    std::string yRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(widthMeters) + "]";
 
     MobilityHelper mobility;
     mobility.SetPositionAllocator ("ns3::RandomRectanglePositionAllocator",
@@ -192,25 +188,28 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(0.0, 0.0, 15.0));
+    allocator->Add(Vector(0, widthMeters / 2, 15.0));
     mobility.SetPositionAllocator(allocator);
     mobility.Install(gateways);
+
+    NS_LOG_INFO("Gateway placed at " << 0 << "," << widthMeters / 2);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
     macHelper.SetDeviceType(LorawanMacHelper::GW);
     helper.Install(phyHelper, macHelper, gateways);
 
+    // TODO: channel model currently unused but could be added later
+#if 0
     /**********************
      *  Handle buildings  *
      **********************/
-
     double xLength = 130;
     double deltaX = 32;
     double yLength = 64;
     double deltaY = 17;
-    int gridWidth = 2 * radiusMeters / (xLength + deltaX);
-    int gridHeight = 2 * radiusMeters / (yLength + deltaY);
+    int gridWidth = widthMeters / (xLength + deltaX);
+    int gridHeight = widthMeters / (yLength + deltaY);
     if (!realisticChannelModel)
     {
         gridWidth = 0;
@@ -255,6 +254,7 @@ main(int argc, char* argv[])
         myfile.close();
     }
 
+#endif
     /**********************************************
      *  Set up the end device's spreading factor  *
      **********************************************/
@@ -326,7 +326,7 @@ main(int argc, char* argv[])
     NS_LOG_INFO("Computing performance metrics...");
 
     LoraPacketTracker& tracker = helper.GetPacketTracker();
-    std::cout << tracker.CountMacPacketsGlobally(Time(0), appStopTime + Hours(1)) << std::endl;
+    std::cout << "Packets Sent, Received: " << tracker.CountMacPacketsGlobally(Time(0), appStopTime + Hours(1)) << std::endl;
 
     return 0;
 }

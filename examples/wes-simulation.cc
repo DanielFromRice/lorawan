@@ -16,16 +16,20 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE("wesSim");
 
 // Network settings
-int nDevices = 20;                 //!< Number of end device nodes to create
+int nDevicesA = 20;                 //!< Number of end device nodes to create
+int nDevicesB = 20;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 double widthMeters = 2000;         //!< Width (m) of the BDR
-double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time
+double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time - 1 hour default
 
 // Channel model
 bool realisticChannelModel = false; //!< Whether to use a more realistic channel model with
                                     //!< Buildings and correlated shadowing
 
-int appPeriodSeconds = 900; //!< Duration (s) of the inter-transmission time of end devices
+int appPeriodSecondsA = 900; //!< Duration (s) of the inter-transmission time of end devices - 15 min default
+int appPeriodSecondsB = 600; //!< Duration (s) of the inter-transmission time of end devices - 10 min default
+int packetSizeA = 23; //!< Base packet size (bytes) of group A end devices
+int packetSizeB = 23; //!< Base packet size (bytes) of group A end devices
 
 // Output control
 bool printBuildingInfo = false; //!< Whether to print building information
@@ -34,12 +38,18 @@ int
 main(int argc, char* argv[])
 {
     CommandLine cmd(__FILE__);
-    cmd.AddValue("nDevices", "Number of end devices to include in the simulation", nDevices);
+    cmd.AddValue("nDevicesA", "Number of end devices in Group A to include in the simulation", nDevicesA);
+    cmd.AddValue("nDevicesB", "Number of end devices to Group B to include in the simulation", nDevicesB);
     cmd.AddValue("width", "The radius (m) of the area to simulate", widthMeters);
     cmd.AddValue("simulationTime", "The time (s) for which to simulate", simulationTimeSeconds);
-    cmd.AddValue("appPeriod",
-                 "The period in seconds to be used by periodically transmitting applications",
-                 appPeriodSeconds);
+    cmd.AddValue("appPeriodA",
+                 "The period in seconds to be used by periodically transmitting applications on device group A",
+                 appPeriodSecondsA);
+    cmd.AddValue("appPeriodB",
+                 "The period in seconds to be used by periodically transmitting applications on device group B",
+                 appPeriodSecondsB);
+    cmd.AddValue("packetSizeA", "Base size in bytes in device group A packets", packetSizeA);
+    cmd.AddValue("packetSizeB", "Base size in bytes in device group B packets", packetSizeB);
     cmd.Parse(argc, argv);
 
     // Set up logging
@@ -70,10 +80,11 @@ main(int argc, char* argv[])
     /***********
      *  Setup  *
      ***********/
-    ns3::RngSeedManager::SetSeed(3);
+    ns3::RngSeedManager::SetSeed(2);
 
     // Create the time value from the period
-    Time appPeriod = Seconds(appPeriodSeconds);
+    Time appPeriodA = Seconds(appPeriodSecondsA);
+    Time appPeriodB = Seconds(appPeriodSecondsB);
 
     // Mobility
     std::string xRange = "ns3::UniformRandomVariable[Min=0.0|Max=" + std::to_string(widthMeters) + "]";
@@ -140,8 +151,12 @@ main(int argc, char* argv[])
      ************************/
 
     // Create a set of nodes
-    NodeContainer endDevices;
-    endDevices.Create(nDevices);
+    NodeContainer endDevicesA, endDevicesB, endDevices;
+    endDevicesA.Create(nDevicesA);
+    endDevicesB.Create(nDevicesB);
+
+    endDevices.Add(endDevicesA);
+    endDevices.Add(endDevicesB);
 
     // Assign a mobility model to each node
     mobility.Install(endDevices);
@@ -268,18 +283,35 @@ main(int argc, char* argv[])
      *********************************************/
 
     Time appStopTime = Seconds(simulationTimeSeconds);
-    PeriodicSenderHelper appHelper = PeriodicSenderHelper();
-    appHelper.SetPeriod(Seconds(appPeriodSeconds));
-    appHelper.SetPacketSize(23);
-    Ptr<RandomVariableStream> rv =
+    PeriodicSenderHelper appHelperA = PeriodicSenderHelper();
+    appHelperA.SetPeriod(appPeriodA);
+    appHelperA.SetPacketSize(packetSizeA);
+    Ptr<RandomVariableStream> rv_a =
         CreateObjectWithAttributes<UniformRandomVariable>("Min",
                                                           DoubleValue(0),
                                                           "Max",
                                                           DoubleValue(10));
-    ApplicationContainer appContainer = appHelper.Install(endDevices);
+    // appHelperA.SetPacketSizeRandomVariable(rv_a);
+    ApplicationContainer appContainerA = appHelperA.Install(endDevicesA);
 
-    appContainer.Start(Time(0));
-    appContainer.Stop(appStopTime);
+    PeriodicSenderHelper appHelperB = PeriodicSenderHelper();
+    appHelperB.SetPeriod(appPeriodB);
+    appHelperB.SetPacketSize(packetSizeB);
+    Ptr<RandomVariableStream> rv_b =
+        CreateObjectWithAttributes<UniformRandomVariable>("Min",
+                                                          DoubleValue(0),
+                                                          "Max",
+                                                          DoubleValue(100));
+    // appHelperB.SetPacketSizeRandomVariable(rv_b);
+    ApplicationContainer appContainerB = appHelperB.Install(endDevicesB);
+
+
+    appContainerA.Start(Time(0));
+    appContainerA.Stop(appStopTime);
+
+    appContainerB.Start(Time(0));
+    appContainerB.Stop(appStopTime);
+
 
     /**************************
      *  Create network server  *

@@ -268,6 +268,8 @@ class LoraPacketTracker
      */
     std::string CountMacPacketsGloballyCpsr(Time startTime, Time stopTime);
 
+    std::map<uint32_t, std::pair<uint32_t, uint32_t>> CountMacPacketsByEndDevice(Time startTime, Time stopTime);
+
   private:
     PhyPacketData m_packetTracker;              //!< Packet map of PHY layer metrics
     MacPacketData m_macPacketTracker;           //!< Packet map of MAC layer metrics

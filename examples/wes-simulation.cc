@@ -76,6 +76,7 @@ main(int argc, char* argv[])
     // LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
+    // LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
@@ -359,6 +360,37 @@ main(int argc, char* argv[])
 
     LoraPacketTracker& tracker = helper.GetPacketTracker();
     std::cout << "Packets Sent, Received: " << tracker.CountMacPacketsGlobally(Time(0), appStopTime + Hours(1)) << std::endl;
+    auto tracker_map = tracker.CountMacPacketsByEndDevice (Time(0), appStopTime + Hours(1));
+    uint32_t groupA_sent = 0;
+    uint32_t groupA_recv = 0;
+    uint32_t groupB_sent = 0;
+    uint32_t groupB_recv = 0;
+    for (auto j = endDevicesA.Begin(); j != endDevicesA.End(); ++j)
+    {
+        Ptr<Node> node = *j;
+        if(tracker_map.contains(node->GetId()))
+        {
+            groupA_sent += tracker_map.at(node->GetId()).first;
+            groupA_recv += tracker_map.at(node->GetId()).second;
+        }
+    }
+    for (auto j = endDevicesB.Begin(); j != endDevicesB.End(); ++j)
+    {
+        Ptr<Node> node = *j;
+        if(tracker_map.contains(node->GetId()))
+        {
+            groupB_sent += tracker_map.at(node->GetId()).first;
+            groupB_recv += tracker_map.at(node->GetId()).second;
+        }
+    }
+    std::cout << "Group A nodes - sent: " << groupA_sent << ", recv: " << groupA_recv;
+    std::cout << ", Group B nodes - sent: " << groupB_sent << ", recv: " << groupB_recv << std::endl;
+    // Individual Node logging:
+    // std::cout << "Packet details:" << std::endl;
+    // for (const auto& entry: tracker_map)
+    // {
+    //     std::cout << "\tID: " << entry.first << ", sent: " << entry.second.first << ", received at gw: " << entry.second.second << std::endl;
+    // }
 
     return 0;
 }

@@ -352,5 +352,36 @@ LoraPacketTracker::CountMacPacketsGloballyCpsr(Time startTime, Time stopTime)
     return std::to_string(sent) + " " + std::to_string(received);
 }
 
+std::map<uint32_t, std::pair<uint32_t, uint32_t>>
+LoraPacketTracker::CountMacPacketsByEndDevice(Time startTime, Time stopTime)
+{
+    NS_LOG_FUNCTION(this << startTime << stopTime);
+
+    std::map<uint32_t, std::pair<uint32_t,uint32_t>> counts;
+
+    for (auto it = m_macPacketTracker.begin(); it != m_macPacketTracker.end(); ++it)
+    {
+        if ((*it).second.sendTime >= startTime && (*it).second.sendTime <= stopTime)
+        {
+            std::pair<uint32_t,uint32_t> id_count;
+            if (!counts.contains((*it).second.senderId))
+            {
+                id_count = std::make_pair(0,0);
+            }
+            else
+            {
+                id_count = counts.at((*it).second.senderId);
+            }
+            id_count.first++;
+            if (!(*it).second.receptionTimes.empty())
+            {
+                id_count.second++;
+            }
+            counts[((*it).second.senderId)] = id_count;
+        }
+    }
+
+    return counts;
+}
 } // namespace lorawan
 } // namespace ns3

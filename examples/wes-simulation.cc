@@ -17,7 +17,7 @@ NS_LOG_COMPONENT_DEFINE("wesSim");
 
 // Network settings
 int nDevicesA = 20;                 //!< Number of end device nodes to create
-int nDevicesB = 20;                 //!< Number of end device nodes to create
+int nDevicesB = 5;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 double widthMeters = 2000;         //!< Width (m) of the BDR
 double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time - 1 hour default
@@ -29,7 +29,7 @@ bool realisticChannelModel = false; //!< Whether to use a more realistic channel
 int appPeriodSecondsA = 900; //!< Duration (s) of the inter-transmission time of end devices - 15 min default
 int appPeriodSecondsB = 600; //!< Duration (s) of the inter-transmission time of end devices - 10 min default
 int packetSizeA = 23; //!< Base packet size (bytes) of group A end devices
-int packetSizeB = 23; //!< Base packet size (bytes) of group A end devices
+int packetSizeB = 500; //!< Base packet size (bytes) of group A end devices
 
 // Output control
 bool printBuildingInfo = false; //!< Whether to print building information
@@ -69,7 +69,9 @@ main(int argc, char* argv[])
     // LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
     // LogComponentEnable("LorawanMacHelper", LOG_LEVEL_ALL);
     // LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
+    // LogComponentEnable("PeriodicBurstSenderHelper", LOG_LEVEL_ALL);
     // LogComponentEnable("PeriodicSender", LOG_LEVEL_ALL);
+    // LogComponentEnable("PeriodicBurstSender", LOG_LEVEL_ALL);
     // LogComponentEnable("LorawanMacHeader", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
@@ -81,7 +83,15 @@ main(int argc, char* argv[])
     /***********
      *  Setup  *
      ***********/
-    ns3::RngSeedManager::SetSeed(2);
+    NS_LOG_DEBUG("Group A nodes: " << nDevicesA);
+    NS_LOG_DEBUG("Group A packet size: " << packetSizeA);
+    NS_LOG_DEBUG("Group A app period: " << appPeriodSecondsA);
+    NS_LOG_DEBUG("Group B nodes: " << nDevicesB);
+    NS_LOG_DEBUG("Group B packet size: " << packetSizeB);
+    NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
+    NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
+
+    ns3::RngSeedManager::SetSeed(3);
 
     // Create the time value from the period
     Time appPeriodA = Seconds(appPeriodSecondsA);
@@ -179,6 +189,8 @@ main(int argc, char* argv[])
         CreateObject<LoraDeviceAddressGenerator>(nwkId, nwkAddr);
 
     // Create the LoraNetDevices of the end devices
+    // TODO: can we split up the device groups for the purposes of making
+    // a different device class for the "audio" devices?
     macHelper.SetAddressGenerator(addrGen);
     phyHelper.SetDeviceType(LoraPhyHelper::ED);
     macHelper.SetDeviceType(LorawanMacHelper::ED_A);
@@ -295,15 +307,12 @@ main(int argc, char* argv[])
     // appHelperA.SetPacketSizeRandomVariable(rv_a);
     ApplicationContainer appContainerA = appHelperA.Install(endDevicesA);
 
-    PeriodicSenderHelper appHelperB = PeriodicSenderHelper();
+    // Set up Group B to send traffic in bursts
+    PeriodicBurstSenderHelper appHelperB = PeriodicBurstSenderHelper();
     appHelperB.SetPeriod(appPeriodB);
     appHelperB.SetPacketSize(packetSizeB);
-    Ptr<RandomVariableStream> rv_b =
-        CreateObjectWithAttributes<UniformRandomVariable>("Min",
-                                                          DoubleValue(0),
-                                                          "Max",
-                                                          DoubleValue(100));
-    // appHelperB.SetPacketSizeRandomVariable(rv_b);
+    appHelperB.SetDwellTime(Seconds(2)); // TODO: this is restricted to 2s min by using a class A device
+
     ApplicationContainer appContainerB = appHelperB.Install(endDevicesB);
 
 

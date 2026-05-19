@@ -200,9 +200,12 @@ EndDeviceLorawanMac::Send(Ptr<Packet> packet)
 
     // If it is not possible to transmit now because of the duty cycle
     // or because we are currently in the process of receiving, schedule a tx/retx later
-    if (auto netxTxDelay = GetNextTransmissionDelay(); netxTxDelay.IsStrictlyPositive())
+    auto nextTxDelay = GetNextTransmissionDelay();
+    NS_LOG_DEBUG("Tx Delay: " << nextTxDelay);
+    if (nextTxDelay.IsStrictlyPositive())
     {
-        PostponeTransmission(netxTxDelay, packet);
+        NS_LOG_ERROR("Postponing by " << nextTxDelay << "...");
+        PostponeTransmission(nextTxDelay, packet);
         m_cannotSendBecauseDutyCycle(packet);
         return;
     }
@@ -322,6 +325,21 @@ EndDeviceLorawanMac::IsPayloadSizeValid(uint32_t appPayloadSize, uint8_t dataRat
                                  << "B, max MACPayload=" << m_maxMacPayloadForDataRate.at(dataRate)
                                  << "B on DR" << unsigned(dataRate));
     return 7 + fOptsLen + 1 + appPayloadSize <= m_maxMacPayloadForDataRate.at(dataRate);
+}
+
+uint8_t
+EndDeviceLorawanMac::GetMaxAppPayloadSize(uint8_t dataRate)
+{
+    uint32_t fOptsLen = 0;
+    for (const auto& c : m_macCommandList)
+    {
+        fOptsLen += c->GetSerializedSize();
+    }
+    /// TODO: FPort could be absent
+    NS_LOG_LOGIC("FHDR(7+FOpts(" << fOptsLen << "))+FPort(1), "
+                                "max MACPayload=" << m_maxMacPayloadForDataRate.at(dataRate)
+                                 << "B on DR" << unsigned(dataRate));
+    return m_maxMacPayloadForDataRate.at(dataRate) - 7 - fOptsLen - 1;
 }
 
 //////////////////////////
@@ -529,6 +547,7 @@ EndDeviceLorawanMac::GetNextTransmissionDelay()
             waitTime = curr;
         }
     }
+    NS_LOG_DEBUG("Final wait time: " << waitTime);
     return GetNextClassTransmissionDelay(waitTime);
 }
 

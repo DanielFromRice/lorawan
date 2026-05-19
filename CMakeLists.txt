@@ -16,6 +16,7 @@ set(source_files
     model/sub-band.cc
     model/logical-lora-channel.cc
     model/logical-lora-channel-helper.cc
+    model/periodic-burst-sender.cc
     model/periodic-sender.cc
     model/one-shot-sender.cc
     model/forwarder.cc
@@ -41,6 +42,7 @@ set(source_files
     helper/lora-helper.cc
     helper/lora-phy-helper.cc
     helper/lorawan-mac-helper.cc
+    helper/periodic-burst-sender-helper.cc
     helper/periodic-sender-helper.cc
     helper/one-shot-sender-helper.cc
     helper/forwarder-helper.cc
@@ -66,6 +68,7 @@ set(header_files
     model/sub-band.h
     model/logical-lora-channel.h
     model/logical-lora-channel-helper.h
+    model/periodic-burst-sender.h
     model/periodic-sender.h
     model/one-shot-sender.h
     model/forwarder.h
@@ -91,6 +94,7 @@ set(header_files
     helper/lora-helper.h
     helper/lora-phy-helper.h
     helper/lorawan-mac-helper.h
+    helper/periodic-burst-sender-helper.h
     helper/periodic-sender-helper.h
     helper/one-shot-sender-helper.h
     helper/forwarder-helper.h

@@ -101,7 +101,11 @@ LogicalLoraChannelHelper::AddEvent(Time duration, uint32_t frequencyHz)
     NS_LOG_DEBUG("frequency=" << frequencyHz << " Hz, timeOnAir=" << duration.As(Time::S));
     auto subBand = GetSubBandFromFrequency(frequencyHz);
     NS_ASSERT_MSG(subBand, "Input frequency is out-of-band");
-    Time nextTxTime = Now() + duration / subBand->GetDutyCycle();
+    // Assume 20 second holdoff on a channel for US params. Original line is
+    // for duty cycle based regional parameters (like for EU params).
+    Time nextTxTime = Now(); // US TEMPORARY - fix time to only apply to each channel rather than full band
+    // Time nextTxTime = Now() + Time("20s"); // US
+    // Time nextTxTime = Now() + duration / subBand->GetDutyCycle(); // EU
     subBand->SetNextTransmissionTime(nextTxTime);
     NS_LOG_DEBUG("now=" << Now().As(Time::S) << ", nextTxTime=" << nextTxTime.As(Time::S));
 }

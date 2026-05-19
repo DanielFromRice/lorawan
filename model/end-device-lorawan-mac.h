@@ -443,6 +443,16 @@ class EndDeviceLorawanMac : public LorawanMac
      */
     bool IsPayloadSizeValid(uint32_t appPayloadSize, uint8_t dataRate);
 
+  public:
+    /**
+     * Return the maximum allowed application payload for the current datarate
+     *
+     * @param dataRate Data Rate to evaluate the max MACPayload for.
+     * @return Maximum allowed payload size.
+     */
+    uint8_t GetMaxAppPayloadSize(uint8_t dataRate);
+
+  private:
     bool m_adr; //!< Uplink ADR bit contained in the FCtrl field of the LoRaWAN FHDR.
                 //!< Controlled by the device, if set to false signals the network server
                 //!< that the device may not accept attempts to control the number of

@@ -9,7 +9,7 @@
 
 #include "end-device-status.h"
 
-#include "class-a-end-device-lorawan-mac.h"
+#include "end-device-lorawan-mac.h"
 #include "lora-tag.h"
 
 #include "ns3/simulator.h"
@@ -32,7 +32,7 @@ EndDeviceStatus::GetTypeId()
 }
 
 EndDeviceStatus::EndDeviceStatus(LoraDeviceAddress endDeviceAddress,
-                                 Ptr<ClassAEndDeviceLorawanMac> endDeviceMac)
+                                 Ptr<EndDeviceLorawanMac> endDeviceMac)
     : m_reply(EndDeviceStatus::Reply()),
       m_endDeviceAddress(endDeviceAddress),
       m_receivedPacketList(ReceivedPacketList()),
@@ -156,7 +156,7 @@ EndDeviceStatus::GetReplyPayload()
     return m_reply.payload->Copy();
 }
 
-Ptr<ClassAEndDeviceLorawanMac>
+Ptr<EndDeviceLorawanMac>
 EndDeviceStatus::GetMac()
 {
     return m_mac;

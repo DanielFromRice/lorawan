@@ -20,6 +20,7 @@ namespace lorawan
 {
 
 class ClassAEndDeviceLorawanMac;
+class ContinuousEndDeviceLorawanMac;
 class GatewayLorawanMac;
 class LorawanMac;
 
@@ -38,7 +39,8 @@ class LorawanMacHelper
     enum DeviceType
     {
         GW,
-        ED_A
+        ED_A,
+        ED_CONT
     };
 
     /**
@@ -205,6 +207,13 @@ class LorawanMacHelper
      * @param edMac Pointer to the device MAC layer to configure.
      */
     void ConfigureForUsRegion(Ptr<ClassAEndDeviceLorawanMac> edMac) const;
+
+    /**
+     * Perform region-specific configurations for the 915 MHz US band.
+     *
+     * @param edMac Pointer to the device MAC layer to configure.
+     */
+    void ConfigureForUsRegion (Ptr<ContinuousEndDeviceLorawanMac> edMac) const;
 
     /**
      * Perform region-specific configurations for the 915 MHz US band.

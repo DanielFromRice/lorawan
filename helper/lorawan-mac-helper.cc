@@ -9,6 +9,7 @@
 #include "lorawan-mac-helper.h"
 
 #include "ns3/class-a-end-device-lorawan-mac.h"
+#include "ns3/continuous-end-device-lorawan-mac.h"
 #include "ns3/end-device-lora-phy.h"
 #include "ns3/gateway-lora-phy.h"
 #include "ns3/gateway-lorawan-mac.h"
@@ -44,6 +45,8 @@ LorawanMacHelper::SetDeviceType(enum DeviceType dt)
     case ED_A:
         m_mac.SetTypeId("ns3::ClassAEndDeviceLorawanMac");
         break;
+    case ED_CONT:
+        m_mac.SetTypeId("ns3::ContinuousEndDeviceLorawanMac");
     }
     m_deviceType = dt;
 }
@@ -73,6 +76,10 @@ LorawanMacHelper::Install(Ptr<Node> node, Ptr<NetDevice> device) const
     {
         DynamicCast<ClassAEndDeviceLorawanMac>(mac)->SetDeviceAddress(m_addrGen->NextAddress());
     }
+    else if (m_deviceType == ED_CONT && m_addrGen)
+    {
+        DynamicCast<ContinuousEndDeviceLorawanMac>(mac)->SetDeviceAddress(m_addrGen->NextAddress());
+    }
 
     // Add a basic list of channels based on the region where the device is
     // operating
@@ -95,6 +102,21 @@ LorawanMacHelper::Install(Ptr<Node> node, Ptr<NetDevice> device) const
         }
         case LorawanMacHelper::ALOHA: {
             ConfigureForAlohaRegion(edMac);
+            break;
+        }
+        default: {
+            NS_LOG_ERROR("This region isn't supported yet!");
+            break;
+        }
+        }
+    }
+    else if (m_deviceType == ED_CONT)
+    {
+        Ptr<ContinuousEndDeviceLorawanMac> edMac = DynamicCast<ContinuousEndDeviceLorawanMac>(mac);
+        switch (m_region)
+        {
+        case LorawanMacHelper::US: {
+            ConfigureForUsRegion(edMac);
             break;
         }
         default: {
@@ -381,6 +403,34 @@ LorawanMacHelper::ConfigureForUsRegion (Ptr<ClassAEndDeviceLorawanMac> edMac) co
 }
 
 void
+LorawanMacHelper::ConfigureForUsRegion (Ptr<ContinuousEndDeviceLorawanMac> edMac) const
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  ApplyCommonUsConfigurations (edMac);
+
+  /////////////////////////////////////////////////////
+  // TxPower -> Transmission power in dBm conversion //
+  /////////////////////////////////////////////////////
+  edMac->SetTxDbmForTxPower (std::vector<double> {30,28,26,24,22,20,18,16,14,12,10,8,6,4,2});
+
+  ////////////////////////////////////////////////////////////
+  // Matrix to know which DataRate the GW will respond with //
+  ////////////////////////////////////////////////////////////
+  LorawanMac::ReplyDataRateMatrix matrix = {{{{10,9,8,8}},
+                                          {{11,10,9,8}},
+                                          {{12,11,10,9}},
+                                          {{13,12,11,10}},
+                                          {{13,13,12,11}}}};
+  edMac->SetReplyDataRateMatrix (matrix);
+
+  /////////////////////
+  // Preamble length //
+  /////////////////////
+  edMac->SetNPreambleSymbols (8);
+}
+
+void
 LorawanMacHelper::ConfigureForUsRegion (Ptr<GatewayLorawanMac> gwMac) const
 {
     NS_LOG_FUNCTION_NOARGS ();
@@ -399,12 +449,10 @@ LorawanMacHelper::ConfigureForUsRegion (Ptr<GatewayLorawanMac> gwMac) const
         gwPhy->ResetReceptionPaths ();
 
         std::vector<double> frequencies;
-        // for (double gwch0_63 = 902.3; gwch0_63<=914.9+0.2; gwch0_63+=0.2){
-        //   frequencies.push_back (gwch0_63);
-        // }
-        // for (double gwch64_71 = 903.0; gwch64_71<=914.2+1.6; gwch64_71+=1.6){
-        for (uint32_t gwch64_71 = 903000000; gwch64_71<=914200000+1600000; gwch64_71+=1600000){
-            frequencies.push_back (gwch64_71);
+        uint32_t current_frequency = 902300000;
+        int num_freqs = 16;
+        for (int i = 0; i < num_freqs; i++, current_frequency += 200000){
+            frequencies.push_back (current_frequency);
         }
 
         for (auto& f : frequencies)
@@ -413,7 +461,7 @@ LorawanMacHelper::ConfigureForUsRegion (Ptr<GatewayLorawanMac> gwMac) const
         }
 
         int receptionPaths = 0;
-        int maxReceptionPaths = 8;
+        int maxReceptionPaths = 16;
         while (receptionPaths < maxReceptionPaths)
         {
             DynamicCast<GatewayLoraPhy>(gwPhy)->AddReceptionPath();
@@ -438,13 +486,12 @@ LorawanMacHelper::ApplyCommonUsConfigurations (Ptr<LorawanMac> loraMac) const
     //////////////////////
 
     uint8_t idx = 0;
-    // for (uint32_t ch0_63 = 902300000; ch0_63<=914900000+200000; ch0_63+=200000){
-    //     Ptr<LogicalLoraChannel> lc0_63 = Create<LogicalLoraChannel> (ch0_63, 0, 3);
-    //     channelHelper->SetChannel(idx++, lc0_63);
-    // }
-    for (uint32_t ch64_71 = 903000000; ch64_71<=914200000+1600000; ch64_71+=1600000){
-        Ptr<LogicalLoraChannel> lc64_71 = Create<LogicalLoraChannel> (ch64_71, 0, 4);
-        channelHelper->SetChannel(idx++, lc64_71);
+    std::vector<double> frequencies;
+    uint32_t current_frequency = 902300000;
+    int num_freqs = 16;
+    for (int i = 0; i < num_freqs; i++, current_frequency += 200000){
+        Ptr<LogicalLoraChannel> lc = Create<LogicalLoraChannel> (current_frequency, 0, 4);
+        channelHelper->SetChannel(idx++, lc);
     }
 
     loraMac->SetLogicalLoraChannelHelper (channelHelper);
@@ -583,8 +630,8 @@ LorawanMacHelper::SetSpreadingFactorsUp(NodeContainer endDevices,
         Ptr<NetDevice> netDevice = object->GetDevice(0);
         Ptr<LoraNetDevice> loraNetDevice = DynamicCast<LoraNetDevice>(netDevice);
         NS_ASSERT(loraNetDevice);
-        Ptr<ClassAEndDeviceLorawanMac> mac =
-            DynamicCast<ClassAEndDeviceLorawanMac>(loraNetDevice->GetMac());
+        Ptr<EndDeviceLorawanMac> mac =
+            DynamicCast<EndDeviceLorawanMac>(loraNetDevice->GetMac());
         NS_ASSERT(mac);
 
         // Try computing the distance from each gateway and find the best one

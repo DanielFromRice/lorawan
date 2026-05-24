@@ -23,7 +23,7 @@ namespace ns3
 namespace lorawan
 {
 
-class ClassAEndDeviceLorawanMac;
+class EndDeviceLorawanMac;
 
 /**
  * @ingroup lorawan
@@ -181,7 +181,7 @@ class EndDeviceStatus : public Object
      * @param endDeviceMac Pointer to the MAC layer of the end device.
      */
     EndDeviceStatus(LoraDeviceAddress endDeviceAddress,
-                    Ptr<ClassAEndDeviceLorawanMac> endDeviceMac);
+                    Ptr<EndDeviceLorawanMac> endDeviceMac);
 
     /**
      * Get the spreading factor this device is using in the first receive window.
@@ -273,7 +273,7 @@ class EndDeviceStatus : public Object
      *
      * @return A pointer to the MAC layer.
      */
-    Ptr<ClassAEndDeviceLorawanMac> GetMac();
+    Ptr<EndDeviceLorawanMac> GetMac();
 
     //////////////////////
     //  Other methods  //
@@ -365,7 +365,7 @@ class EndDeviceStatus : public Object
 
     /// @note Using this attribute is 'cheating', since we are assuming perfect
     /// synchronization between the info at the device and at the network server
-    Ptr<ClassAEndDeviceLorawanMac> m_mac; //!< Pointer to the MAC layer of this device
+    Ptr<EndDeviceLorawanMac> m_mac; //!< Pointer to the MAC layer of this device
 };
 
 } // namespace lorawan

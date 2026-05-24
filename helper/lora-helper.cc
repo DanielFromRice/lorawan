@@ -87,6 +87,7 @@ LoraHelper::Install(const LoraPhyHelper& phyHelper,
             }
         }
 
+        NS_LOG_DEBUG("About to create MAC");
         // Create the MAC
         Ptr<LorawanMac> mac = macHelper.Install(node, device);
         NS_ASSERT(mac);

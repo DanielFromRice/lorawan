@@ -42,7 +42,7 @@ NetworkStatus::~NetworkStatus()
 }
 
 void
-NetworkStatus::AddNode(Ptr<ClassAEndDeviceLorawanMac> edMac)
+NetworkStatus::AddNode(Ptr<EndDeviceLorawanMac> edMac)
 {
     NS_LOG_FUNCTION(this << edMac);
 
@@ -52,7 +52,7 @@ NetworkStatus::AddNode(Ptr<ClassAEndDeviceLorawanMac> edMac)
     {
         // The device doesn't exist. Create new EndDeviceStatus
         Ptr<EndDeviceStatus> edStatus =
-            CreateObject<EndDeviceStatus>(edAddress, DynamicCast<ClassAEndDeviceLorawanMac>(edMac));
+            CreateObject<EndDeviceStatus>(edAddress, DynamicCast<EndDeviceLorawanMac>(edMac));
 
         // Add it to the map
         m_endDeviceStatuses.insert(
@@ -168,11 +168,11 @@ NetworkStatus::GetReplyForDevice(LoraDeviceAddress edAddress, int windowNumber)
     switch (windowNumber)
     {
     case 1:
-        tag.SetDataRate(edStatus->GetMac()->GetFirstReceiveWindowDataRate());
+        tag.SetDataRate(edStatus->GetMac()->GetReceiveWindowDataRate(1));
         tag.SetFrequency(edStatus->GetFirstReceiveWindowFrequency());
         break;
     case 2:
-        tag.SetDataRate(edStatus->GetMac()->GetSecondReceiveWindowDataRate());
+        tag.SetDataRate(edStatus->GetMac()->GetReceiveWindowDataRate(2));
         tag.SetFrequency(edStatus->GetSecondReceiveWindowFrequency());
         break;
     }

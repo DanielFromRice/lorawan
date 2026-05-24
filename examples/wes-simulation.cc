@@ -29,7 +29,7 @@ bool realisticChannelModel = false; //!< Whether to use a more realistic channel
 int appPeriodSecondsA = 900; //!< Duration (s) of the inter-transmission time of end devices - 15 min default
 int appPeriodSecondsB = 600; //!< Duration (s) of the inter-transmission time of end devices - 10 min default
 int packetSizeA = 23; //!< Base packet size (bytes) of group A end devices
-int packetSizeB = 500; //!< Base packet size (bytes) of group A end devices
+int packetSizeB = 500; //!< Base packet size (bytes) of group B end devices
 
 // Output control
 bool printBuildingInfo = false; //!< Whether to print building information
@@ -189,12 +189,12 @@ main(int argc, char* argv[])
         CreateObject<LoraDeviceAddressGenerator>(nwkId, nwkAddr);
 
     // Create the LoraNetDevices of the end devices
-    // TODO: can we split up the device groups for the purposes of making
-    // a different device class for the "audio" devices?
     macHelper.SetAddressGenerator(addrGen);
     phyHelper.SetDeviceType(LoraPhyHelper::ED);
     macHelper.SetDeviceType(LorawanMacHelper::ED_A);
-    helper.Install(phyHelper, macHelper, endDevices);
+    helper.Install(phyHelper, macHelper, endDevicesA);
+    macHelper.SetDeviceType(LorawanMacHelper::ED_CONT);
+    helper.Install(phyHelper, macHelper, endDevicesB);
 
     // Now end devices are connected to the channel
 
@@ -216,11 +216,12 @@ main(int argc, char* argv[])
 
     Ptr<ListPositionAllocator> allocator = CreateObject<ListPositionAllocator>();
     // Make it so that nodes are at a certain height > 0
-    allocator->Add(Vector(0, widthMeters / 2, 15.0));
+    // Places Gateway at the center of the region
+    allocator->Add(Vector(widthMeters / 2, widthMeters / 2, 15.0));
     mobility.SetPositionAllocator(allocator);
     mobility.Install(gateways);
 
-    NS_LOG_INFO("Gateway placed at " << 0 << "," << widthMeters / 2);
+    NS_LOG_INFO("Gateway placed at " << widthMeters / 2 << "," << widthMeters / 2);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);
@@ -287,6 +288,8 @@ main(int argc, char* argv[])
      *  Set up the end device's spreading factor  *
      **********************************************/
 
+    // NOTE: can set a specific device's spreading factor with:
+    // DynamicCast<EndDeviceLorawanMac>(node->GetMac())->SetDataRate(value);
     auto spreadFactorDistribution = LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel, LorawanMacHelper::US);
 
     NS_LOG_DEBUG("Completed configuration");
@@ -311,7 +314,7 @@ main(int argc, char* argv[])
     PeriodicBurstSenderHelper appHelperB = PeriodicBurstSenderHelper();
     appHelperB.SetPeriod(appPeriodB);
     appHelperB.SetPacketSize(packetSizeB);
-    appHelperB.SetDwellTime(Seconds(2)); // TODO: this is restricted to 2s min by using a class A device
+    appHelperB.SetDwellTime(MilliSeconds(400)); // TODO: this is restricted to 2s min by using a class A device
 
     ApplicationContainer appContainerB = appHelperB.Install(endDevicesB);
 

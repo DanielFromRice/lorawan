@@ -108,7 +108,7 @@ ClassAEndDeviceLorawanMac::SendToPhy(Ptr<Packet> packetToSend)
 
     // Instruct the PHY on the right Spreading Factor to listen for during the window
     // create a SetReplyDataRate function?
-    uint8_t replyDataRate = GetFirstReceiveWindowDataRate();
+    uint8_t replyDataRate = GetReceiveWindowDataRate(1);
     NS_LOG_DEBUG("m_dataRate: " << unsigned(m_dataRate)
                                 << ", m_rx1DrOffset: " << unsigned(m_rx1DrOffset)
                                 << ", replyDataRate: " << unsigned(replyDataRate) << ".");
@@ -294,8 +294,8 @@ ClassAEndDeviceLorawanMac::OpenFirstReceiveWindow()
     DynamicCast<EndDeviceLoraPhy>(m_phy)->SwitchToStandby();
 
     // Calculate the duration of a single symbol for the first receive window data rate
-    double tSym = pow(2, GetSfFromDataRate(GetFirstReceiveWindowDataRate())) /
-                  GetBandwidthFromDataRate(GetFirstReceiveWindowDataRate());
+    double tSym = pow(2, GetSfFromDataRate(GetReceiveWindowDataRate(1))) /
+                  GetBandwidthFromDataRate(GetReceiveWindowDataRate(1));
 
     // Schedule return to sleep after "at least the time required by the end
     // device's radio transceiver to effectively detect a downlink preamble"
@@ -360,8 +360,8 @@ ClassAEndDeviceLorawanMac::OpenSecondReceiveWindow()
         GetSfFromDataRate(m_secondReceiveWindowDataRate));
 
     // Calculate the duration of a single symbol for the second receive window data rate
-    double tSym = pow(2, GetSfFromDataRate(GetSecondReceiveWindowDataRate())) /
-                  GetBandwidthFromDataRate(GetSecondReceiveWindowDataRate());
+    double tSym = pow(2, GetSfFromDataRate(GetReceiveWindowDataRate(2))) /
+                  GetBandwidthFromDataRate(GetReceiveWindowDataRate(2));
 
     // Schedule return to sleep after "at least the time required by the end
     // device's radio transceiver to effectively detect a downlink preamble"
@@ -458,8 +458,8 @@ ClassAEndDeviceLorawanMac::GetNextClassTransmissionDelay(Time waitTime)
             NS_LOG_WARN(
                 "Attempting to send when there are receive windows: Transmission postponed.");
             // Compute the duration of a single symbol for the second receive window data rate
-            double tSym = pow(2, GetSfFromDataRate(GetSecondReceiveWindowDataRate())) /
-                          GetBandwidthFromDataRate(GetSecondReceiveWindowDataRate());
+            double tSym = pow(2, GetSfFromDataRate(GetReceiveWindowDataRate(2))) /
+                          GetBandwidthFromDataRate(GetReceiveWindowDataRate(2));
             // Compute the closing time of the second receive window
             Time endSecondRxWindow = Time(m_secondReceiveWindow.GetTs()) +
                                      Seconds(m_receiveWindowDurationInSymbols * tSym);
@@ -488,21 +488,26 @@ ClassAEndDeviceLorawanMac::GetNextClassTransmissionDelay(Time waitTime)
 }
 
 uint8_t
-ClassAEndDeviceLorawanMac::GetFirstReceiveWindowDataRate()
+ClassAEndDeviceLorawanMac::GetReceiveWindowDataRate(uint8_t window)
 {
-    return m_replyDataRateMatrix.at(m_dataRate).at(m_rx1DrOffset);
+    if (window == 1)
+    {
+        return m_replyDataRateMatrix.at(m_dataRate).at(m_rx1DrOffset);
+    }
+    else if (window == 2)
+    {
+        return m_secondReceiveWindowDataRate;
+    }
+    else
+    {
+        NS_ABORT_MSG ("Invalid window number");
+    }
 }
 
 void
 ClassAEndDeviceLorawanMac::SetSecondReceiveWindowDataRate(uint8_t dataRate)
 {
     m_secondReceiveWindowDataRate = dataRate;
-}
-
-uint8_t
-ClassAEndDeviceLorawanMac::GetSecondReceiveWindowDataRate() const
-{
-    return m_secondReceiveWindowDataRate;
 }
 
 void

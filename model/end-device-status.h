@@ -358,7 +358,8 @@ class EndDeviceStatus : public Object
     uint8_t m_firstReceiveWindowSpreadingFactor = 0;  //!< Spreading Factor (SF) for RX1 window
     uint32_t m_firstReceiveWindowFrequencyHz = 0;     //!< Frequency [Hz] for RX1 window
     uint8_t m_secondReceiveWindowSpreadingFactor = 0; //!< Spreading Factor (SF) for RX2 window.
-    uint32_t m_secondReceiveWindowFrequencyHz = 869525000; //!< Frequency [Hz] for RX2 window
+    // TODO: ensure this is set dynamically per region
+    uint32_t m_secondReceiveWindowFrequencyHz = 923300000; //!< Frequency [Hz] for RX2 window
     EventId m_receiveWindowEvent; //!< Event storing the next scheduled downlink transmission
 
     ReceivedPacketList m_receivedPacketList; //!< List of received packets

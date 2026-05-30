@@ -52,7 +52,7 @@ ContinuousEndDeviceLorawanMac::SendToPhy(Ptr<Packet> packetToSend)
     Ptr<EndDeviceLoraPhy> phy = DynamicCast<EndDeviceLoraPhy>(m_phy);
     if (phy->GetState() == EndDeviceLoraPhy::State::RX)
     {
-        DynamicCast<EndDeviceLoraPhy>(m_phy)->SwitchToSleep();
+        DynamicCast<EndDeviceLoraPhy>(m_phy)->SwitchToStandby();
     }
 
     /////////////////////////////////////////////////////////
@@ -262,7 +262,8 @@ ContinuousEndDeviceLorawanMac::GetNextClassTransmissionDelay(Time waitTime)
 uint8_t
 ContinuousEndDeviceLorawanMac::GetReceiveWindowDataRate(uint8_t window)
 {
-    if (window == 1)
+    // TODO: properly set up receive windows
+    if (window == 1 || window == 2)
     {
         return m_replyDataRateMatrix.at(m_dataRate).at(m_rx1DrOffset);
     }

@@ -399,7 +399,7 @@ LorawanMacHelper::ConfigureForUsRegion (Ptr<ClassAEndDeviceLorawanMac> edMac) co
   // Second receive window parameters //
   //////////////////////////////////////
   edMac->SetSecondReceiveWindowDataRate (8);
-  edMac->SetSecondReceiveWindowFrequency (923.3);
+  edMac->SetSecondReceiveWindowFrequency (923300000);
 }
 
 void

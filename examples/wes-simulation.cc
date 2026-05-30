@@ -50,6 +50,7 @@ main(int argc, char* argv[])
                  appPeriodSecondsB);
     cmd.AddValue("packetSizeA", "Base size in bytes in device group A packets", packetSizeA);
     cmd.AddValue("packetSizeB", "Base size in bytes in device group B packets", packetSizeB);
+    cmd.AddValue("seed", "Random generator seed", seed);
     cmd.Parse(argc, argv);
 
     // Set up logging
@@ -62,6 +63,7 @@ main(int argc, char* argv[])
     // LogComponentEnable("LorawanMac", LOG_LEVEL_ALL);
     // LogComponentEnable("EndDeviceLorawanMac", LOG_LEVEL_ALL);
     // LogComponentEnable("ClassAEndDeviceLorawanMac", LOG_LEVEL_ALL);
+    // LogComponentEnable("ContinuousEndDeviceLorawanMac", LOG_LEVEL_ALL);
     // LogComponentEnable("GatewayLorawanMac", LOG_LEVEL_ALL);
     // LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
     // LogComponentEnable("LogicalLoraChannel", LOG_LEVEL_ALL);
@@ -77,21 +79,23 @@ main(int argc, char* argv[])
     // LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
+    // LogComponentEnable("GatewayStatus", LOG_LEVEL_ALL);
     // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
 
     /***********
      *  Setup  *
      ***********/
-    NS_LOG_DEBUG("Group A nodes: " << nDevicesA);
-    NS_LOG_DEBUG("Group A packet size: " << packetSizeA);
-    NS_LOG_DEBUG("Group A app period: " << appPeriodSecondsA);
-    NS_LOG_DEBUG("Group B nodes: " << nDevicesB);
+    // NS_LOG_DEBUG("Group A nodes: " << nDevicesA);
+    // NS_LOG_DEBUG("Group A packet size: " << packetSizeA);
+    // NS_LOG_DEBUG("Group A app period: " << appPeriodSecondsA);
+    // NS_LOG_DEBUG("Group B nodes: " << nDevicesB);
     NS_LOG_DEBUG("Group B packet size: " << packetSizeB);
-    NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
-    NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
+    // NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
+    // NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
+    NS_LOG_DEBUG("Seed: " << seed);
 
-    ns3::RngSeedManager::SetSeed(3);
+    ns3::RngSeedManager::SetSeed(seed);
 
     // Create the time value from the period
     Time appPeriodA = Seconds(appPeriodSecondsA);
@@ -179,7 +183,7 @@ main(int argc, char* argv[])
         Vector position = mobility->GetPosition();
         position.z = 1.2;
         mobility->SetPosition(position);
-        NS_LOG_INFO("Node " << (*j)->GetId() << " placed at " << position.x << "," << position.y);
+        // NS_LOG_INFO("Node " << (*j)->GetId() << " placed at " << position.x << "," << position.y);
     }
 
     // Create the LoraNetDevices of the end devices
@@ -221,7 +225,7 @@ main(int argc, char* argv[])
     mobility.SetPositionAllocator(allocator);
     mobility.Install(gateways);
 
-    NS_LOG_INFO("Gateway placed at " << widthMeters / 2 << "," << widthMeters / 2);
+    // NS_LOG_INFO("Gateway placed at " << widthMeters / 2 << "," << widthMeters / 2);
 
     // Create a netdevice for each gateway
     phyHelper.SetDeviceType(LoraPhyHelper::GW);

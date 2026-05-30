@@ -27,8 +27,8 @@ bool realisticChannelModel = false; //!< Whether to use a more realistic channel
                                     //!< Buildings and correlated shadowing
 
 int appPeriodSecondsA = 900; //!< Duration (s) of the inter-transmission time of end devices - 15 min default
-int appPeriodSecondsB = 600; //!< Duration (s) of the inter-transmission time of end devices - 10 min default
-int packetSizeA = 23; //!< Base packet size (bytes) of group A end devices
+int appPeriodSecondsB = 900; //!< Duration (s) of the inter-transmission time of end devices - 15 min default
+int packetSizeA = 25; //!< Base packet size (bytes) of group A end devices
 int packetSizeB = 500; //!< Base packet size (bytes) of group B end devices
 
 // Output control
@@ -54,7 +54,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     // Set up logging
-    LogComponentEnable("wesSim", LOG_LEVEL_ALL);
+    // LogComponentEnable("wesSim", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
     // LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
     // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
@@ -86,13 +86,13 @@ main(int argc, char* argv[])
     /***********
      *  Setup  *
      ***********/
-    // NS_LOG_DEBUG("Group A nodes: " << nDevicesA);
-    // NS_LOG_DEBUG("Group A packet size: " << packetSizeA);
-    // NS_LOG_DEBUG("Group A app period: " << appPeriodSecondsA);
-    // NS_LOG_DEBUG("Group B nodes: " << nDevicesB);
+    NS_LOG_DEBUG("Group A nodes: " << nDevicesA);
+    NS_LOG_DEBUG("Group A packet size: " << packetSizeA);
+    NS_LOG_DEBUG("Group A app period: " << appPeriodSecondsA);
+    NS_LOG_DEBUG("Group B nodes: " << nDevicesB);
     NS_LOG_DEBUG("Group B packet size: " << packetSizeB);
-    // NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
-    // NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
+    NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
+    NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
     NS_LOG_DEBUG("Seed: " << seed);
 
     ns3::RngSeedManager::SetSeed(seed);
@@ -295,8 +295,21 @@ main(int argc, char* argv[])
     // NOTE: can set a specific device's spreading factor with:
     // DynamicCast<EndDeviceLorawanMac>(node->GetMac())->SetDataRate(value);
     auto spreadFactorDistribution = LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel, LorawanMacHelper::US);
+    for (auto node=endDevices.Begin (); node != endDevices.End (); ++node)
+    {
+        Ptr<Node> object = *node;
+        Ptr<MobilityModel> position = object->GetObject<MobilityModel>();
+        NS_ASSERT(position);
+        Ptr<NetDevice> netDevice = object->GetDevice(0);
+        Ptr<LoraNetDevice> loraNetDevice = DynamicCast<LoraNetDevice>(netDevice);
+        NS_ASSERT(loraNetDevice);
+        Ptr<EndDeviceLorawanMac> mac =
+            DynamicCast<EndDeviceLorawanMac>(loraNetDevice->GetMac());
+        NS_ASSERT(mac);
+        mac->SetDataRate(1);
+    }
 
-    NS_LOG_DEBUG("Completed configuration");
+    // NS_LOG_DEBUG("Completed configuration");
 
     /*********************************************
      *  Install applications on the end devices  *
@@ -364,7 +377,7 @@ main(int argc, char* argv[])
 
     Simulator::Stop(appStopTime + Hours(1));
 
-    NS_LOG_INFO("Running simulation...");
+    // NS_LOG_INFO("Running simulation...");
     Simulator::Run();
 
     Simulator::Destroy();
@@ -372,10 +385,10 @@ main(int argc, char* argv[])
     ///////////////////////////
     // Print results to file //
     ///////////////////////////
-    NS_LOG_INFO("Computing performance metrics...");
+    // NS_LOG_INFO("Computing performance metrics...");
 
     LoraPacketTracker& tracker = helper.GetPacketTracker();
-    std::cout << "Packets Sent, Received: " << tracker.CountMacPacketsGlobally(Time(0), appStopTime + Hours(1)) << std::endl;
+    // std::cout << "Packets Sent, Received: " << tracker.CountMacPacketsGlobally(Time(0), appStopTime + Hours(1)) << std::endl;
     auto tracker_map = tracker.CountMacPacketsByEndDevice (Time(0), appStopTime + Hours(1));
     uint32_t groupA_sent = 0;
     uint32_t groupA_recv = 0;
@@ -399,8 +412,10 @@ main(int argc, char* argv[])
             groupB_recv += tracker_map.at(node->GetId()).second;
         }
     }
-    std::cout << "Group A nodes - sent: " << groupA_sent << ", recv: " << groupA_recv;
-    std::cout << ", Group B nodes - sent: " << groupB_sent << ", recv: " << groupB_recv << std::endl;
+    // std::cout << "Results - " << nDevicesA << ", " << seed << ", " << groupA_sent << ", " << groupA_recv << ", " << 100 * (groupA_sent - groupA_recv) / (double)groupA_sent << "%\n";
+    std::cout << appPeriodSecondsA << ", " << nDevicesA << ", " << groupA_sent << ", " << groupA_recv << ", " << 100*(groupA_sent - groupA_recv) / (double)groupA_sent;
+    std::cout << ", " << appPeriodSecondsB << ", " << nDevicesB << ", " << groupB_sent << ", " << groupB_recv  << ", " << 100*(groupB_sent - groupB_recv) / (double)groupB_sent;
+    std::cout << ", " << seed << ", " << packetSizeB << std::endl;
     // Individual Node logging:
     // std::cout << "Packet details:" << std::endl;
     // for (const auto& entry: tracker_map)

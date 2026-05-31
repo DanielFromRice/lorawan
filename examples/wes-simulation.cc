@@ -15,9 +15,11 @@ using namespace lorawan;
 
 NS_LOG_COMPONENT_DEFINE("wesSim");
 
+int seed = 3;
+
 // Network settings
-int nDevicesA = 20;                 //!< Number of end device nodes to create
-int nDevicesB = 5;                 //!< Number of end device nodes to create
+int nDevicesA = 25;                 //!< Number of end device nodes to create
+int nDevicesB = 25;                 //!< Number of end device nodes to create
 int nGateways = 1;                  //!< Number of gateway nodes to create
 double widthMeters = 2000;         //!< Width (m) of the BDR
 double simulationTimeSeconds = 3600; //!< Scenario duration (s) in simulated time - 1 hour default

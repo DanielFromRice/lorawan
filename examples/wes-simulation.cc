@@ -33,6 +33,8 @@ int appPeriodSecondsB = 900; //!< Duration (s) of the inter-transmission time of
 int packetSizeA = 25; //!< Base packet size (bytes) of group A end devices
 int packetSizeB = 500; //!< Base packet size (bytes) of group B end devices
 
+int dataMode = -1;
+
 // Output control
 bool printBuildingInfo = false; //!< Whether to print building information
 
@@ -53,6 +55,7 @@ main(int argc, char* argv[])
     cmd.AddValue("packetSizeA", "Base size in bytes in device group A packets", packetSizeA);
     cmd.AddValue("packetSizeB", "Base size in bytes in device group B packets", packetSizeB);
     cmd.AddValue("seed", "Random generator seed", seed);
+    cmd.AddValue("dataMode", "Data Mode to send uplink traffic, -1 for auto selection by range", dataMode);
     cmd.Parse(argc, argv);
 
     // Set up logging
@@ -95,7 +98,10 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Group B packet size: " << packetSizeB);
     NS_LOG_DEBUG("Group B app period: " << appPeriodSecondsB);
     NS_LOG_DEBUG("Simulation time: " << simulationTimeSeconds);
+    NS_LOG_DEBUG("Data Mode: " << dataMode);
     NS_LOG_DEBUG("Seed: " << seed);
+
+    NS_ASSERT(dataMode >= -1 && dataMode <= 4);
 
     ns3::RngSeedManager::SetSeed(seed);
 
@@ -297,18 +303,21 @@ main(int argc, char* argv[])
     // NOTE: can set a specific device's spreading factor with:
     // DynamicCast<EndDeviceLorawanMac>(node->GetMac())->SetDataRate(value);
     auto spreadFactorDistribution = LorawanMacHelper::SetSpreadingFactorsUp(endDevices, gateways, channel, LorawanMacHelper::US);
-    for (auto node=endDevices.Begin (); node != endDevices.End (); ++node)
+    if (dataMode != -1)
     {
-        Ptr<Node> object = *node;
-        Ptr<MobilityModel> position = object->GetObject<MobilityModel>();
-        NS_ASSERT(position);
-        Ptr<NetDevice> netDevice = object->GetDevice(0);
-        Ptr<LoraNetDevice> loraNetDevice = DynamicCast<LoraNetDevice>(netDevice);
-        NS_ASSERT(loraNetDevice);
-        Ptr<EndDeviceLorawanMac> mac =
-            DynamicCast<EndDeviceLorawanMac>(loraNetDevice->GetMac());
-        NS_ASSERT(mac);
-        mac->SetDataRate(1);
+        for (auto node=endDevices.Begin (); node != endDevices.End (); ++node)
+        {
+            Ptr<Node> object = *node;
+            Ptr<MobilityModel> position = object->GetObject<MobilityModel>();
+            NS_ASSERT(position);
+            Ptr<NetDevice> netDevice = object->GetDevice(0);
+            Ptr<LoraNetDevice> loraNetDevice = DynamicCast<LoraNetDevice>(netDevice);
+            NS_ASSERT(loraNetDevice);
+            Ptr<EndDeviceLorawanMac> mac =
+                DynamicCast<EndDeviceLorawanMac>(loraNetDevice->GetMac());
+            NS_ASSERT(mac);
+            mac->SetDataRate(dataMode);
+        }
     }
 
     // NS_LOG_DEBUG("Completed configuration");
@@ -417,7 +426,7 @@ main(int argc, char* argv[])
     // std::cout << "Results - " << nDevicesA << ", " << seed << ", " << groupA_sent << ", " << groupA_recv << ", " << 100 * (groupA_sent - groupA_recv) / (double)groupA_sent << "%\n";
     std::cout << appPeriodSecondsA << ", " << nDevicesA << ", " << groupA_sent << ", " << groupA_recv << ", " << 100*(groupA_sent - groupA_recv) / (double)groupA_sent;
     std::cout << ", " << appPeriodSecondsB << ", " << nDevicesB << ", " << groupB_sent << ", " << groupB_recv  << ", " << 100*(groupB_sent - groupB_recv) / (double)groupB_sent;
-    std::cout << ", " << seed << ", " << packetSizeB << std::endl;
+    std::cout << ", " << dataMode << ", " << seed << ", " << packetSizeB << std::endl;
     // Individual Node logging:
     // std::cout << "Packet details:" << std::endl;
     // for (const auto& entry: tracker_map)

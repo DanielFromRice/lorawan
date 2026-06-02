@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 
 # Enables manual multiprocessing by batching over node counts
 parser.add_argument("-n", "--run_number", type=int, default=0, required=True)
-# parser.add_argument("-d", "--data_mode", type=int, default=-1, required=False)
+parser.add_argument("-d", "--data_mode", type=int, default=-1, required=False)
 args = parser.parse_args()
 
 if args.run_number > len(node_counts) or args.run_number < 0:

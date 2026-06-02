@@ -102,6 +102,10 @@ main(int argc, char* argv[])
     NS_LOG_DEBUG("Seed: " << seed);
 
     NS_ASSERT(dataMode >= -1 && dataMode <= 4);
+    NS_ASSERT(packetSizeB >= 0);
+    NS_ASSERT(packetSizeA >= 0);
+    NS_ASSERT(appPeriodSecondsA > 0);
+    NS_ASSERT(appPeriodSecondsB > 0);
 
     ns3::RngSeedManager::SetSeed(seed);
 

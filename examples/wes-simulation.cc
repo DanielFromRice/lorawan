@@ -62,6 +62,7 @@ main(int argc, char* argv[])
     // LogComponentEnable("wesSim", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
     // LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
+    // LogComponentEnable("SimpleEndDeviceLoraPhy", LOG_LEVEL_INFO);
     // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
     // LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
     // LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
@@ -346,7 +347,7 @@ main(int argc, char* argv[])
     PeriodicBurstSenderHelper appHelperB = PeriodicBurstSenderHelper();
     appHelperB.SetPeriod(appPeriodB);
     appHelperB.SetPacketSize(packetSizeB);
-    appHelperB.SetDwellTime(MilliSeconds(400)); // TODO: this is restricted to 2s min by using a class A device
+    appHelperB.SetDwellTime(MilliSeconds(500)); // TODO: this is restricted to 2s min by using a class A device
 
     ApplicationContainer appContainerB = appHelperB.Install(endDevicesB);
 
